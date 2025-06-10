@@ -1,0 +1,23 @@
+interval: 0.25s
+
+site:
+  title: evcc Ariston Test
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: http
+      uri: http://localhost:12000/api/state
+      jq: .site.grid.power
+
+chargers:
+  - name: waterheater
+    type: template
+    template: ariston-waterheater
+    username: testuser
+    password: testpass
+    device_id: TEST123
+    user_agent: evcc-test/1.0 

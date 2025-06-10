@@ -1,0 +1,35 @@
+template: ariston-waterheater
+products:
+  - brand: Ariston
+    description:
+      generic: Water Heater (Smart)
+group: heating
+capabilities: ["mA"]
+params:
+  - name: username
+    type: string
+    required: true
+    description:
+      en: "Ariston account username"
+  - name: password
+    type: string
+    required: true
+    description:
+      en: "Ariston account password"
+  - name: device_id
+    type: string
+    required: true
+    description:
+      en: "Device ID (e.g., 30C922DBBF1C)"
+  - name: user_agent
+    type: string
+    description:
+      en: "User agent string for API requests"
+    default: "evcc/1.0"
+render: |
+  type: ariston
+  uri: https://www.ariston-net.remotethermo.com/api/v2
+  user: {{ .username }}
+  password: {{ .password }}
+  device_id: {{ .device_id }}
+  user_agent: {{ .user_agent }}

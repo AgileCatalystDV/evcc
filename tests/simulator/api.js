@@ -8,6 +8,13 @@ let state = {
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
+  chargers: {
+    waterheater: {
+      boost: false,
+      comfort: 60,
+      reduced: 45
+    }
+  }
 };
 
 const loggingMiddleware = (req, res, next) => {
@@ -86,6 +93,31 @@ const shellyMiddleware = (req, res, next) => {
   }
 };
 
+const aristonMiddleware = (req, res, next) => {
+  if (req.method === "POST" && req.originalUrl === "/api/v2/accounts/login") {
+    // Simulate login
+    res.end(JSON.stringify({ token: "test-token" }));
+  } else if (req.method === "GET" && req.originalUrl.includes("/api/v2/remote/plants/") && req.originalUrl.includes("/features")) {
+    // Simulate features endpoint
+    res.end(JSON.stringify({
+      success: true,
+      comfort: state.chargers.waterheater.comfort,
+      reduced: state.chargers.waterheater.reduced
+    }));
+  } else if (req.method === "POST" && req.originalUrl.includes("/api/v2/velis/slpPlantData/") && req.originalUrl.includes("/boost")) {
+    // Simulate boost endpoint
+    state.chargers.waterheater.boost = req.body;
+    res.end(JSON.stringify({ success: true }));
+  } else if (req.method === "POST" && req.originalUrl.includes("/api/v2/velis/slpPlantData/") && req.originalUrl.includes("/temperatures")) {
+    // Simulate temperatures endpoint
+    state.chargers.waterheater.comfort = req.body.new.comfort;
+    state.chargers.waterheater.reduced = req.body.new.reduced;
+    res.end(JSON.stringify({ success: true }));
+  } else {
+    next();
+  }
+};
+
 export default () => ({
   name: "api",
   enforce: "pre",
@@ -98,6 +130,7 @@ export default () => ({
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
       server.middlewares.use(shellyMiddleware);
+      server.middlewares.use(aristonMiddleware);
     };
   },
 });
