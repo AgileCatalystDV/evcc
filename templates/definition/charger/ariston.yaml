@@ -1,0 +1,95 @@
+template: ariston-waterheater
+products:
+  - brand: Ariston
+    description:
+      generic: Water Heater (Smart)
+group: heating
+params:
+  - name: username
+    type: string
+    description:
+      en: "Ariston account username"
+  - name: password
+    type: string
+    description:
+      en: "Ariston account password"
+  - name: device_id
+    type: string
+    description:
+      en: "Device ID (e.g., 30C922DBBF1C)"
+  - name: user_agent
+    type: string
+    description:
+      en: "User agent string for API requests"
+    default: "evcc/1.0"
+render: |
+  type: http
+  auth:
+    source: http
+    method: POST
+    url: https://www.ariston-net.remotethermo.com/api/v2/accounts/login
+    body:
+      usr: {{ .username }}
+      pwd: {{ .password }}
+    headers:
+      User-Agent: {{ .user_agent }}
+    response:
+      token: token
+
+  getmode:
+    source: http
+    method: GET
+    url: https://www.ariston-net.remotethermo.com/api/v2/remote/plants/{{ .device_id }}/features
+    headers:
+      User-Agent: {{ .user_agent }}
+      ar.authToken: {{ .auth.token }}
+    response:
+      boost: success
+
+  setmode:
+    source: switch
+    switch:
+    - case: 3 # boost
+      set:
+        source: http
+        method: POST
+        url: https://www.ariston-net.remotethermo.com/api/v2/velis/slpPlantData/{{ .device_id }}/boost
+        headers:
+          User-Agent: {{ .user_agent }}
+          ar.authToken: {{ .auth.token }}
+        body: true
+    - case: 2 # normal
+      set:
+        source: http
+        method: POST
+        url: https://www.ariston-net.remotethermo.com/api/v2/velis/slpPlantData/{{ .device_id }}/boost
+        headers:
+          User-Agent: {{ .user_agent }}
+          ar.authToken: {{ .auth.token }}
+        body: false
+
+  temp:
+    source: http
+    method: GET
+    url: https://www.ariston-net.remotethermo.com/api/v2/remote/plants/{{ .device_id }}/features
+    headers:
+      User-Agent: {{ .user_agent }}
+      ar.authToken: {{ .auth.token }}
+    response:
+      comfort: new.comfort
+      reduced: new.reduced
+
+  settemp:
+    source: http
+    method: POST
+    url: https://www.ariston-net.remotethermo.com/api/v2/velis/slpPlantData/{{ .device_id }}/temperatures
+    headers:
+      User-Agent: {{ .user_agent }}
+      ar.authToken: {{ .auth.token }}
+    body:
+      new:
+        comfort: {{ .settemp }}
+        reduced: {{ .reducedtemp }}
+      old:
+        comfort: {{ .temp.comfort }}
+        reduced: {{ .temp.reduced }} 
